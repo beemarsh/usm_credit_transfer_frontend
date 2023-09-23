@@ -21,8 +21,10 @@ export function isAgeValid(age) {
 }
 
 export function isValidPhoneNumber(phoneNumber) {
-    console.log(phoneNumber);
-  const pattern = /^\+\d{1,15}$/; // This pattern allows for up to 15 digits after the country code
+  // Define a regular expression pattern for a U.S. phone number
+  const pattern = /^\d{10}$/; // Matches exactly 10 digits
+
+  // Use the test() method to check if the phoneNumber matches the pattern
   return pattern.test(phoneNumber);
 }
 

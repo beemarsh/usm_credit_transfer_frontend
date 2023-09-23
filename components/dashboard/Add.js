@@ -36,12 +36,15 @@ import {
 import { enqueueSnackbar } from "notistack";
 import { DEBUG, SERVER_URL } from "../../config/conf";
 import Loading from "../Loading";
+import { useRouter } from "next/router";
 
 const steps = ["Primary Information", "Transfer Credits and Courses", "Review"];
 
 export default function DashboardAddStudent({ initials }) {
   const { majors, schools } = initials;
   const [activeStep, setActiveStep] = useState(0);
+
+  const [pp, setPP] = useState({ value: null, error: "" });
   const [first_name, set_first_name] = useState({
     value: "Bimarsh",
     error: "",
@@ -50,24 +53,20 @@ export default function DashboardAddStudent({ initials }) {
   const [usm_id, set_usm_id] = useState({ value: "10173074", error: "" });
 
   //
-  const [age, set_age] = useState({ value: "20", error: "" });
-  const [std_prev_school, set_std_prev_school] = useState({
-    value: "JCC",
-    error: "",
-  });
+  const [std_prev_school, set_std_prev_school] = useState([
+    {
+      value: "",
+      error: "",
+      key: "default_key_for_prev_schools",
+    },
+  ]);
 
   //
   const [country, set_country] = useState({ value: "US", error: "" });
-  const [dob, set_dob] = useState({ value: dayjs(), error: "" });
 
   //
   const [phone_number, set_phone_number] = useState({
-    country_code: "+1",
     value: "6013072081",
-    error: "",
-  });
-  const [address, set_address] = useState({
-    value: "College Drive, Mississippi",
     error: "",
   });
   const [major, set_major] = useState({ value: "CSC", error: "" });
@@ -82,29 +81,30 @@ export default function DashboardAddStudent({ initials }) {
 
   //Second Step States
   const [courses, setCourses] = useState([]);
-  const [selectedcourses, setSelectedCourses] = useState([
-    { value: "", error: "", key: "default_key_for_seleced_courses" },
-  ]);
 
+  const [selectedcourses, setSelectedCourses] = useState([]);
+  //Selcted Coursese Format;
+  // selectedcourses = [
+  //   {
+  //     school_code: "",
+  //     school_name: "",
+  //     course_list: [{ value: "", error: "", key: "" }],
+  //   },
+  // { .... }
+  // ];
+
+  const [fetching, setFetching] = useState(false);
+  const [verified, setVerifiedStatus] = useState(false);
   const first_step_check = () => {
     let f_name_check = isNameValid(first_name.value);
     let l_name_check = isNameValid(last_name.value);
     let usm_id_check = isUsmIDValid(usm_id.value);
-    let age_check = isAgeValid(age.value);
-    let prev_school_check =
-      std_prev_school.value !== "" &&
-      std_prev_school.value !== null &&
-      std_prev_school.value !== undefined;
+    let prev_school_check = std_prev_school.every((item) => item.value !== "");
     let country_check =
       country.value !== "" &&
       country.value !== null &&
       country.value !== undefined;
-    let dob_check =
-      dob.value !== "" && dob.value !== null && dob.value !== undefined;
-    let phone_check = isValidPhoneNumber(
-      phone_number.country_code + phone_number.value
-    );
-    let address_check = isValidAddress(address.value);
+    let phone_check = isValidPhoneNumber(phone_number.value);
     let major_check =
       major.value !== "" && major.value !== null && major.value !== undefined;
     let trf_date_check =
@@ -128,32 +128,25 @@ export default function DashboardAddStudent({ initials }) {
         error: "Please enter a valid 8 digit USM ID",
       }));
     }
-    if (!age_check) {
-      set_age((pre) => ({ ...pre, error: "Please enter a valid age" }));
-    }
     if (!prev_school_check) {
-      set_std_prev_school((pre) => ({
-        ...pre,
-        error: "Please select previous school",
-      }));
+      set_std_prev_school((pre) => {
+        pre.forEach((item) => {
+          if (item.value === "") {
+            item.error = "Please select a valid school.";
+          }
+        });
+        return [...pre];
+      });
     }
+
     if (!country_check) {
       set_country((pre) => ({ ...pre, error: "Please select a country" }));
-    }
-    if (!dob_check) {
-      set_dob((pre) => ({
-        ...pre,
-        error: "Please select a valid Date of Birth",
-      }));
     }
     if (!phone_check) {
       set_phone_number((pre) => ({
         ...pre,
         error: "Please enter a valid phone number",
       }));
-    }
-    if (!address_check) {
-      set_address((pre) => ({ ...pre, error: "Please enter a valid address" }));
     }
     if (!major_check) {
       set_major((pre) => ({ ...pre, error: "Please select a major" }));
@@ -175,12 +168,9 @@ export default function DashboardAddStudent({ initials }) {
       !f_name_check ||
       !l_name_check ||
       !usm_id_check ||
-      !age_check ||
       !prev_school_check ||
       !country_check ||
-      !dob_check ||
       !phone_check ||
-      !address_check ||
       !major_check ||
       !trf_date_check ||
       !grad_date_check
@@ -192,7 +182,25 @@ export default function DashboardAddStudent({ initials }) {
   };
 
   const second_step_check = () => {
-    setActiveStep(2);
+    let is_correct = selectedcourses.every(({ course_list }) => {
+      return course_list?.every(({ value }) => value !== "");
+    });
+
+    if (!is_correct) {
+      let new_selectedcourses_with_error = selectedcourses.map((arr) => {
+        return {
+          ...arr,
+          course_list: arr.course_list.map((item) => {
+            if (item.value === "") item["error"] = "Please select a course";
+            return item;
+          }),
+        };
+      });
+
+      setSelectedCourses(new_selectedcourses_with_error);
+    } else {
+      setActiveStep(2);
+    }
   };
   const back_to_first_step = () => {
     setActiveStep(0);
@@ -202,122 +210,182 @@ export default function DashboardAddStudent({ initials }) {
     setActiveStep(1);
   };
 
-  const confirmAndVerify = () => {};
-  return (
-    <Box
-      sx={{
-        display: "flex",
-        py: 2,
-        mt: 4,
-        flexDirection: "column",
-        gap: "10px",
-      }}
-    >
-      <Stepper activeStep={activeStep} alternativeLabel>
-        {steps.map((label, index) => {
-          return (
-            <Step key={label}>
-              <StepLabel>{label}</StepLabel>
-            </Step>
-          );
-        })}
-      </Stepper>
-      {activeStep == 0 ? (
-        <FirstStep
-          majors={majors}
-          schools={schools}
-          first_name={first_name}
-          last_name={last_name}
-          usm_id={usm_id}
-          age={age}
-          std_prev_school={std_prev_school}
-          country={country}
-          dob={dob}
-          phone_number={phone_number}
-          address={address}
-          major={major}
-          transfer_date={transfer_date}
-          graduation_date={graduation_date}
-          set_first_name={set_first_name}
-          set_last_name={set_last_name}
-          set_usm_id={set_usm_id}
-          set_age={set_age}
-          set_std_prev_school={set_std_prev_school}
-          set_country={set_country}
-          set_dob={set_dob}
-          set_phone_number={set_phone_number}
-          set_address={set_address}
-          set_major={set_major}
-          set_transfer_date={set_transfer_date}
-          set_graduation_date={set_graduation_date}
-          nextStep={first_step_check}
-        />
-      ) : activeStep == 1 ? (
-        <SecondStep
-          selected_school={std_prev_school.value}
-          courses={courses}
-          selectedcourses={selectedcourses}
-          setCourses={setCourses}
-          setSelectedCourses={setSelectedCourses}
-          previousStep={back_to_first_step}
-          nextStep={second_step_check}
-        />
-      ) : (
-        <ThirdStep
-          confirmAndVerify={confirmAndVerify}
-          previousStep={back_to_second_step}
-          first_name={first_name}
-          last_name={last_name}
-          usm_id={usm_id}
-          age={age}
-          std_prev_school={std_prev_school}
-          country={country}
-          dob={dob}
-          phone_number={phone_number}
-          address={address}
-          major={major}
-          transfer_date={transfer_date}
-          graduation_date={graduation_date}
-          courses={courses}
-          majors={majors}
-          schools={schools}
-          selectedcourses={selectedcourses}
-        />
-      )}
-    </Box>
-  );
+  const confirmAndVerify = async () => {
+    setFetching(true);
+    try {
+      let student_data = {
+        first_name: first_name.value,
+        last_name: last_name.value,
+        id: usm_id.value,
+        country: country.value,
+        phone_number: phone_number.value,
+        major: major.value,
+        transfer_date: transfer_date.value.toISOString(),
+        graduation_date: graduation_date.value.toISOString(),
+        courses_taken: selectedcourses,
+      };
+      const formdata = new FormData();
+      formdata.append("pp", pp.value);
+      formdata.append("student_data", JSON.stringify(student_data));
+
+      const re = await fetch(`${SERVER_URL}/add_student`, {
+        method: "POST",
+        credentials: "include",
+        body: formdata,
+      });
+
+      if (!re.ok) throw await re.json();
+
+      setVerifiedStatus(true);
+    } catch (error) {
+      if (DEBUG) console.log(error);
+      enqueueSnackbar({
+        message: error?.message
+          ? error?.message
+          : "Sorry! There was an error. Please try again",
+      });
+    }
+    setFetching(false);
+  };
+
+  if (verified)
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          py: 2,
+          mt: 4,
+          flexDirection: "column",
+          gap: "10px",
+        }}
+      >
+        <VerifiedScreen />
+      </Box>
+    );
+  else
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          py: 2,
+          mt: 4,
+          flexDirection: "column",
+          gap: "10px",
+        }}
+      >
+        <Stepper activeStep={activeStep} alternativeLabel>
+          {steps.map((label, index) => {
+            return (
+              <Step key={label}>
+                <StepLabel>{label}</StepLabel>
+              </Step>
+            );
+          })}
+        </Stepper>
+        {activeStep == 0 ? (
+          <FirstStep
+            majors={majors}
+            schools={schools}
+            pp={pp}
+            setPP={setPP}
+            first_name={first_name}
+            last_name={last_name}
+            usm_id={usm_id}
+            std_prev_school={std_prev_school}
+            country={country}
+            phone_number={phone_number}
+            major={major}
+            transfer_date={transfer_date}
+            graduation_date={graduation_date}
+            set_first_name={set_first_name}
+            set_last_name={set_last_name}
+            set_usm_id={set_usm_id}
+            set_std_prev_school={set_std_prev_school}
+            set_country={set_country}
+            set_phone_number={set_phone_number}
+            set_major={set_major}
+            set_transfer_date={set_transfer_date}
+            set_graduation_date={set_graduation_date}
+            nextStep={first_step_check}
+          />
+        ) : activeStep == 1 ? (
+          <SecondStep
+            selected_school={std_prev_school}
+            retrievedCourses={courses}
+            selectedcourses={selectedcourses}
+            setCourses={setCourses}
+            setSelectedCourses={setSelectedCourses}
+            previousStep={back_to_first_step}
+            nextStep={second_step_check}
+          />
+        ) : (
+          <ThirdStep
+            confirmAndVerify={confirmAndVerify}
+            previousStep={back_to_second_step}
+            first_name={first_name}
+            last_name={last_name}
+            usm_id={usm_id}
+            std_prev_school={std_prev_school}
+            country={country}
+            phone_number={phone_number}
+            major={major}
+            transfer_date={transfer_date}
+            graduation_date={graduation_date}
+            courses={courses}
+            majors={majors}
+            schools={schools}
+            selectedcourses={selectedcourses}
+            pp={pp}
+          />
+        )}
+      </Box>
+    );
 }
 
 const FirstStep = ({
   majors,
   schools,
+  pp,
+  setPP,
   first_name,
   last_name,
   usm_id,
-  age,
   std_prev_school,
   country,
-  dob,
   phone_number,
-  address,
   major,
   transfer_date,
   graduation_date,
   set_first_name,
   set_last_name,
   set_usm_id,
-  set_age,
   set_std_prev_school,
   set_country,
-  set_dob,
   set_phone_number,
-  set_address,
   set_major,
   set_transfer_date,
   set_graduation_date,
   nextStep,
-  ...props
 }) => {
+  const add_school = () => {
+    set_std_prev_school((pre) => {
+      let data_len = pre.length;
+      pre.push({
+        value: "",
+        error: "",
+        key: `new_default_key_for_previous_schools-${data_len}`,
+      });
+      return [...pre];
+    });
+  };
+
+  const delete_school = (idx) => {
+    set_std_prev_school((pre) => {
+      pre.splice(idx, 1);
+      return [...pre];
+    });
+  };
+
   return (
     <>
       {/* Profile Pic */}
@@ -332,13 +400,33 @@ const FirstStep = ({
       >
         {/* Image */}
         <Image
-          src={AddStudentIcon}
+          src={pp?.value ? URL.createObjectURL(pp?.value) : AddStudentIcon}
           alt="User Picture"
           height={150}
           width={150}
         />
         {/* Add Image Button */}
-        <Button variant="contained">Add a Picture</Button>
+        <>
+          <input
+            accept="image/*"
+            type="file"
+            id="image-button-file"
+            style={{ display: "none" }}
+            onChange={(e) => {
+              setPP((pre) => ({ value: e.target.files[0], error: "" }));
+            }}
+          />
+          <label htmlFor="image-button-file">
+            <Button
+              variant="contained"
+              component="span"
+              size="large"
+              color="primary"
+            >
+              Upload
+            </Button>
+          </label>
+        </>
       </Box>
 
       {/* Second name and ID row */}
@@ -381,44 +469,77 @@ const FirstStep = ({
         />
       </Box>
 
-      {/* Third Age and Previous School Row */}
+      {/* and Previous School Row */}
       <Box>
-        <TextField
-          label="Age"
-          sx={{ m: 1, width: "5rem" }}
-          value={age.value}
-          onChange={(e) =>
-            set_age((pre) => {
-              return { error: "", value: e.target.value };
-            })
-          }
-          error={age.error ? true : false}
-          helperText={age.error}
-        />
+        {std_prev_school?.map(({ value, error, key }, index) => {
+          return (
+            <Box
+              sx={{
+                display: "flex",
+                gap: "20px",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+              key={key}
+            >
+              <FormControl
+                sx={{ m: 1, minWidth: `calc(100% - 30%)` }}
+                error={error ? true : false}
+              >
+                <InputLabel id="demo-simple-select-helper-label">
+                  Please select previous institute of applicant
+                </InputLabel>
+                <Select
+                  label="Please select previous institute of applicant"
+                  value={value}
+                  onChange={(e) => {
+                    set_std_prev_school((pre) => {
+                      pre[index] = {
+                        value: e.target.value,
+                        error: "",
+                        key: e.target.value,
+                      };
+                      return [...pre];
+                    });
+                  }}
+                >
+                  {schools.map(({ code, name }) => {
+                    let exists_already = std_prev_school?.some(
+                      (obj) => obj.value === code
+                    );
+                    return (
+                      <MenuItem
+                        key={code}
+                        value={code}
+                        disabled={exists_already}
+                      >
+                        {`${name} (${code})`}
+                      </MenuItem>
+                    );
+                  })}
+                </Select>
+              </FormControl>
 
-        <FormControl
-          sx={{ m: 1, minWidth: `calc(100% - 30%)` }}
-          error={std_prev_school.error ? true : false}
-        >
-          <InputLabel id="demo-simple-select-helper-label">
-            Please select previous institute of applicant
-          </InputLabel>
-          <Select
-            label="Please select previous institute of applicant"
-            value={std_prev_school.value}
-            onChange={(e) =>
-              set_std_prev_school((pre) => {
-                return { error: "", value: e.target.value };
-              })
-            }
-          >
-            {schools.map(({ code, name }) => (
-              <MenuItem key={code} value={code}>
-                {`${name} (${code})`}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+              <Button
+                variant="contained"
+                onClick={() => delete_school(index)}
+                disabled={std_prev_school.length <= 1}
+              >
+                Remove
+              </Button>
+              <Button
+                variant="contained"
+                onClick={add_school}
+                disabled={
+                  index !== std_prev_school.length - 1 ||
+                  index >= schools?.length - 1
+                }
+              >
+                Add New
+              </Button>
+            </Box>
+          );
+        })}
       </Box>
 
       {/* Fourth Country and DOB */}
@@ -444,17 +565,6 @@ const FirstStep = ({
             ))}
           </Select>
         </FormControl>
-
-        <DatePicker
-          label="Date of Birth"
-          value={dayjs(dob.value)}
-          openTo="year"
-          onChange={(v) => {
-            set_dob((pre) => {
-              return { error: "", value: v };
-            });
-          }}
-        />
       </Box>
 
       {/* Fifth address and phone number */}
@@ -468,31 +578,12 @@ const FirstStep = ({
               return {
                 error: "",
                 value: e.target.value,
-                country_code: countries.find(
-                  ({ code }) => country.value == code
-                ).dial_code,
               };
             })
           }
           error={phone_number.error ? true : false}
           helperText={phone_number.error}
         />
-        <TextField
-          label="Address"
-          sx={{ m: 1 }}
-          value={address.value}
-          onChange={(e) =>
-            set_address((pre) => {
-              return { error: "", value: e.target.value };
-            })
-          }
-          error={address.error ? true : false}
-          helperText={address.error}
-        />
-      </Box>
-
-      {/* Sixth Majors and Transfer Date */}
-      <Box sx={{ display: "flex", gap: "10px" }}>
         <FormControl
           sx={{ minWidth: "50%" }}
           error={major.error ? true : false}
@@ -518,7 +609,10 @@ const FirstStep = ({
             ))}
           </Select>
         </FormControl>
+      </Box>
 
+      {/* Sixth Graduation and Transfer Date */}
+      <Box sx={{ display: "flex", gap: "10px" }}>
         <DatePicker
           label="Transfer Date"
           openTo="year"
@@ -529,10 +623,6 @@ const FirstStep = ({
             });
           }}
         />
-      </Box>
-
-      {/* Seventh Graduation Date*/}
-      <Box sx={{ display: "flex", gap: "10px" }}>
         <DatePicker
           label="Graduation Year"
           openTo="year"
@@ -557,7 +647,7 @@ const FirstStep = ({
 
 const SecondStep = ({
   selected_school,
-  courses,
+  retrievedCourses,
   setCourses,
   selectedcourses,
   setSelectedCourses,
@@ -573,7 +663,9 @@ const SecondStep = ({
           method: "POST",
           credentials: "include",
           body: JSON.stringify({
-            school: selected_school,
+            schools: selected_school.map((item) => ({
+              school_code: item.value,
+            })),
           }),
           headers: {
             "Content-Type": "application/json",
@@ -584,6 +676,32 @@ const SecondStep = ({
 
         let data = await re.json();
         setCourses(data);
+        //Now setting the state so that we have proper format
+        let new_selected_course_format = [];
+        data.map(({ school_name, school_code }) => {
+          let school_already_exists = selectedcourses.find(
+            (item) => item?.school_code === school_code
+          );
+          new_selected_course_format.push({
+            school_name: school_name,
+            school_code: school_code,
+            course_list: school_already_exists
+              ? [
+                  ...selectedcourses[
+                    selectedcourses?.indexOf(school_already_exists)
+                  ]?.course_list,
+                ]
+              : [
+                  {
+                    value: "",
+                    error: "",
+                    key: `default_${school_code}_course_key`,
+                  },
+                ],
+          });
+        });
+
+        setSelectedCourses(new_selected_course_format);
       } catch (error) {
         if (DEBUG) console.log(error);
         enqueueSnackbar({
@@ -598,10 +716,10 @@ const SecondStep = ({
     getSchoolsCourses();
   }, [selected_school]);
 
-  const add_new = () => {
+  const add_new = (idx) => {
     setSelectedCourses((pre) => {
       let data_len = pre.length;
-      pre.push({
+      pre[idx]?.course_list?.push({
         value: "",
         error: "",
         key: `new_default_key_for_seleced_courses-${data_len}`,
@@ -610,9 +728,9 @@ const SecondStep = ({
     });
   };
 
-  const delete_new = (idx) => {
+  const delete_new = (idx, course_idx) => {
     setSelectedCourses((pre) => {
-      pre.splice(idx, 1);
+      pre[idx]?.course_list?.splice(course_idx, 1);
       return [...pre];
     });
   };
@@ -622,75 +740,97 @@ const SecondStep = ({
   else
     return (
       <>
-        {selectedcourses.map(({ value, error, key }, index) => {
-          return (
-            <Box
-              sx={{
-                display: "flex",
-                gap: "20px",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-              key={key}
-            >
-              <FormControl
-                sx={{ m: 1, minWidth: `calc(100% - 30%)` }}
-                error={error ? true : false}
-              >
-                <InputLabel id="demo-simple-select-helper-label">
-                  Please select courses taken by the applicant
-                </InputLabel>
-                <Select
-                  label="Please select courses taken by the applicant"
-                  value={value}
-                  onChange={(e) => {
-                    setSelectedCourses((pre) => {
-                      pre[index] = {
-                        value: e.target.value,
-                        error: "",
-                        key: e.target.value,
-                      };
-                      return [...pre];
-                    });
-                  }}
-                >
-                  {courses?.map(({ course_id, name }) => {
-                    let exists_already = selectedcourses.some(
-                      (obj) => obj.value === course_id
-                    );
-                    return (
-                      <MenuItem
-                        key={course_id}
-                        value={course_id}
-                        disabled={exists_already}
-                      >
-                        {`${name} (${course_id})`}
-                      </MenuItem>
-                    );
-                  })}
-                </Select>
-              </FormControl>
+        {selectedcourses.map(
+          ({ school_code, school_name, course_list }, index) => {
+            return (
+              <Box key={`${school_code}-${school_name}`}>
+                <Typography>{`${school_name} (${school_code})`}</Typography>
+                <hr />
 
-              <Button
-                variant="contained"
-                onClick={() => delete_new(index)}
-                disabled={selectedcourses.length <= 1}
-              >
-                Remove
-              </Button>
-              <Button
-                variant="contained"
-                onClick={add_new}
-                disabled={
-                  index !== selectedcourses.length - 1 ||
-                  index >= courses.length - 1
-                }
-              >
-                Add New
-              </Button>
-            </Box>
-          );
-        })}
+                {course_list.map(({ value, error, key }, course_idx) => {
+                  return (
+                    <Box
+                      key={key}
+                      sx={{
+                        display: "flex",
+                        gap: "20px",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <FormControl
+                        sx={{ m: 1, minWidth: `calc(100% - 30%)` }}
+                        error={error ? true : false}
+                      >
+                        <InputLabel id="demo-simple-select-helper-label">
+                          Please select courses taken by the applicant
+                        </InputLabel>
+                        <Select
+                          label="Please select courses taken by the applicant"
+                          value={value}
+                          onChange={(e) => {
+                            setSelectedCourses((pre) => {
+                              pre[index].course_list[course_idx] = {
+                                value: e.target.value,
+                                error: "",
+                                key: `${school_code}-${e.target.value}-${course_idx}-${index}`,
+                              };
+                              return [...pre];
+                            });
+                          }}
+                        >
+                          {retrievedCourses
+                            .find((item) => item.school_code === school_code)
+                            ?.courses?.map(
+                              ({ name, usm_eqv, course_id, credit_hours }) => {
+                                let exists_already = selectedcourses[
+                                  index
+                                ].course_list.some(
+                                  (obj) => obj.value === course_id
+                                );
+                                return (
+                                  <MenuItem
+                                    key={course_id}
+                                    value={course_id}
+                                    disabled={exists_already}
+                                  >
+                                    {`${name} (${course_id})  (${credit_hours} hrs)  || USM:  ${usm_eqv}`}
+                                  </MenuItem>
+                                );
+                              }
+                            )}
+                        </Select>
+                      </FormControl>
+
+                      <Button
+                        variant="contained"
+                        onClick={() => delete_new(index, course_idx)}
+                        disabled={
+                          selectedcourses[index]?.course_list?.length <= 1
+                        }
+                      >
+                        Remove
+                      </Button>
+                      <Button
+                        variant="contained"
+                        onClick={() => add_new(index)}
+                        disabled={
+                          course_idx !==
+                            selectedcourses[index]?.course_list?.length - 1 ||
+                          course_idx >=
+                            retrievedCourses[index]?.courses?.length - 1
+                        }
+                      >
+                        Add New
+                      </Button>
+                    </Box>
+                  );
+                })}
+              </Box>
+            );
+          }
+        )}
+
         <Button onClick={previousStep}>Back</Button>
         <Button
           onClick={nextStep}
@@ -712,12 +852,9 @@ const ThirdStep = ({
   first_name,
   last_name,
   usm_id,
-  age,
   std_prev_school,
   country,
-  dob,
   phone_number,
-  address,
   major,
   transfer_date,
   graduation_date,
@@ -725,6 +862,7 @@ const ThirdStep = ({
   majors,
   schools,
   selectedcourses,
+  pp,
 }) => {
   return (
     <>
@@ -740,7 +878,7 @@ const ThirdStep = ({
       >
         {/* Image */}
         <Image
-          src={AddStudentIcon}
+          src={pp?.value ? URL.createObjectURL(pp?.value) : AddStudentIcon}
           alt="User Picture"
           height={150}
           width={150}
@@ -755,33 +893,11 @@ const ThirdStep = ({
       </Box>
 
       <Box sx={{ display: "flex", gap: "40px", alignItems: "center" }}>
-        <Typography variant="h6">Age: {age.value}</Typography>
-
-        <Typography variant="h6">
-          Previous School:{" "}
-          {
-            schools.find(({ code }) => {
-              return code === std_prev_school.value;
-            })?.name
-          }
-          {` (${std_prev_school.value})`}
-        </Typography>
-      </Box>
-
-      <Box sx={{ display: "flex", gap: "40px", alignItems: "center" }}>
         <Typography variant="h6">Country: {country.value}</Typography>
-
-        <Typography variant="h6">
-          Date of Birth: {dayjs(dob.value).format("L")}
-        </Typography>
       </Box>
 
       <Box sx={{ display: "flex", gap: "40px", alignItems: "center" }}>
-        <Typography variant="h6">
-          Phone Number: {phone_number.country_code} {phone_number.value}
-        </Typography>
-
-        <Typography variant="h6">Address: {address.value}</Typography>
+        <Typography variant="h6">Phone Number: {phone_number.value}</Typography>
       </Box>
 
       <Box sx={{ display: "flex", gap: "40px", alignItems: "center" }}>
@@ -805,24 +921,34 @@ const ThirdStep = ({
 
       <Typography variant="h4">Courses</Typography>
 
-      {selectedcourses.map(({ value }, idx) => {
-        let { course_id, credit_hours, name, usm_eqv } = courses.find(
-          ({ course_id }) => {
-            return course_id == value;
-          }
-        );
+      {selectedcourses.map(({ school_code, school_name, course_list }, idx) => {
+        let target_school_courses = courses?.find(
+          (obj) => obj.school_code === school_code
+        )?.courses;
         return (
-          <Box
-            sx={{ display: "flex", gap: "40px", alignItems: "center" }}
-            key={course_id}
-          >
-            <Typography>{idx + 1} </Typography>
-            <Typography>
-              {name} {`(${course_id})`} ---{" "}
-            </Typography>
-            <Typography>{`${credit_hours} hours`} </Typography>
-            <Typography>{`USM Equivalent: ${usm_eqv}`}</Typography>
-          </Box>
+          <>
+            <Typography>{`${
+              idx + 1
+            }. ${school_name} (${school_code})`}</Typography>
+            {course_list?.map(({ value, key }, course_idx) => {
+              const { name, usm_eqv, course_id, credit_hours } =
+                target_school_courses?.find(
+                  ({ course_id }) => value === course_id
+                );
+              return (
+                <Box
+                  sx={{ display: "flex", gap: "40px", alignItems: "center" }}
+                  key={key}
+                >
+                  <Typography>{`${course_idx + 1}. `}</Typography>
+                  <Typography>{name}</Typography>
+                  <Typography>{course_id}</Typography>
+                  <Typography>{`${credit_hours} hours`} </Typography>
+                  <Typography>{`USM Equivalent: ${usm_eqv}`}</Typography>
+                </Box>
+              );
+            })}
+          </>
         );
       })}
 
@@ -832,6 +958,16 @@ const ThirdStep = ({
       <Button variant="contained" onClick={confirmAndVerify}>
         Verify and Submit
       </Button>
+    </>
+  );
+};
+
+const VerifiedScreen = () => {
+  const router = useRouter();
+  return (
+    <>
+      <Typography>Successfully added student</Typography>
+      <Button onClick={() => router.reload()}>Add New Student</Button>
     </>
   );
 };
