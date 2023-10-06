@@ -4,6 +4,16 @@ export function isNameValid(f_name) {
   return pattern.test(f_name) && f_name.length >= 2;
 }
 
+export function isLongNameValid(name) {
+  const pattern = /^[\w\s]+$/;
+  return pattern.test(name) && name?.length >= 2;
+}
+
+export function isSchoolCodeValid(code) {
+  const pattern = /^[A-Za-z]+$/;
+  return pattern.test(code) && code?.length >= 3;
+}
+
 export function isUsmIDValid(id) {
   const pattern = /^\d{8}$/;
 
@@ -48,4 +58,15 @@ export function isValidPassword(password) {
   const letterPattern = /[a-zA-Z]/;
   const numberPattern = /[0-9]/;
   return letterPattern.test(password) && numberPattern.test(password);
+}
+
+export function isValidHours(hour) {
+  let regex = /^[0-9]+$/;
+  if (!regex.test(hour)) return false;
+  return true;
+}
+
+export function isValidCourseID(id) {
+  const pattern = /^[A-Za-z0-9]+$/;
+  return pattern.test(id) && id?.length >= 3;
 }

@@ -23,21 +23,21 @@ export const admin_links = [
   },
   {
     title: "Schools",
-    link: "/schools",
+    link: "/admin/schools",
     Icon: AddBox,
     description: "Add new schools",
     LargeIcon: AddStudentIcon,
   },
   {
     title: "Courses",
-    link: "/courses",
+    link: "/admin/courses",
     Icon: Pending,
     description: "Access all the students that have pending transfer credits",
     LargeIcon: PendingIcon,
   },
   {
     title: "USM Departments",
-    link: "/usm_departments",
+    link: "/admin/usm_departments",
     Icon: AdminPanelSettings,
     description:
       "Change the settings like roles, access methods, departments and other highly critical information",
@@ -45,7 +45,7 @@ export const admin_links = [
   },
   {
     title: "USM Majors",
-    link: "/usm_majors",
+    link: "/admin/usm_majors",
     Icon: AdminPanelSettings,
     description:
       "Change the settings like roles, access methods, departments and other highly critical information",
@@ -53,7 +53,7 @@ export const admin_links = [
   },
   {
     title: "USM Courses",
-    link: "/usm_courses",
+    link: "/admin/usm_courses",
     Icon: AdminPanelSettings,
     description:
       "Change the settings like roles, access methods, departments and other highly critical information",

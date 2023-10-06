@@ -926,7 +926,7 @@ const ThirdStep = ({
           (obj) => obj.school_code === school_code
         )?.courses;
         return (
-          <>
+          <Box key={school_code}>
             <Typography>{`${
               idx + 1
             }. ${school_name} (${school_code})`}</Typography>
@@ -948,7 +948,7 @@ const ThirdStep = ({
                 </Box>
               );
             })}
-          </>
+          </Box>
         );
       })}
 

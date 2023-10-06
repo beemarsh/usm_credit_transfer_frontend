@@ -1,16 +1,11 @@
 import { useAuthCheck } from "../../hooks/useAuthCheck";
 import { DashBoardLayout } from "../../layouts";
 import { Loading } from "../../components";
-import Users from "../../components/dashboard/admin/Users";
+import Courses from "../../components/dashboard/admin/Courses";
 import { DEBUG, SERVER_URL } from "../../config/conf";
 import { enqueueSnackbar } from "notistack";
 
-export default function UsersAdmin({
-  departments,
-  users,
-  total_pages,
-  total_rows,
-}) {
+export default function UsersAdmin({ courses, schools, total_rows }) {
   const { isAuthenticated, user, authenticating } = useAuthCheck();
   if (authenticating) {
     // Loading state while verifying tokens
@@ -19,46 +14,39 @@ export default function UsersAdmin({
     // Render the protected content
     return (
       <DashBoardLayout user={user}>
-        <Users
-          departments={departments}
-          users={users}
-          total_pages={total_pages}
-          total_rows={total_rows}
-        />
+        <Courses courses={courses} schools={schools} total_rows={total_rows} />
       </DashBoardLayout>
     );
   }
 }
 
 export async function getServerSideProps(ctx) {
-  let departments = [];
-  let users = [];
-  let total_pages = 0;
+  let schools = [];
+  let courses = [];
   let total_rows = 0;
 
   try {
-    const re = await fetch(`${SERVER_URL}/get_departments`, {
+    const re = await fetch(`${SERVER_URL}/add_initials`, {
       credentials: "include",
       method: "POST",
-      headers: { ...ctx.req.headers, "Content-Type": "application/json" },
-      body: JSON.stringify({ q: "", all: true }),
+      headers: { ...ctx.req.headers },
     });
 
     if (!re.ok) throw await re.json();
 
-    let results = await re.json();
-    departments = results?.data;
+    let data = await re.json();
+    schools = data?.schools;
   } catch (error) {
     if (DEBUG) console.log(error);
     enqueueSnackbar({
       message: error?.message
         ? error?.message
-        : "Sorry! Couldn't fetch departments properly",
+        : "Sorry! Couldn't fetch schools properly",
     });
   }
 
   try {
-    const re = await fetch(`${SERVER_URL}/get_users`, {
+    const re = await fetch(`${SERVER_URL}/get_other_courses`, {
       credentials: "include",
       method: "POST",
       headers: { ...ctx.req.headers, "Content-Type": "application/json" },
@@ -68,8 +56,7 @@ export async function getServerSideProps(ctx) {
     if (!re.ok) throw await re.json();
 
     let result = await re.json();
-    users = result?.data;
-    total_pages = result?.total;
+    courses = result?.data;
     total_rows = result?.total_rows;
   } catch (error) {
     if (DEBUG) console.log(error);
@@ -82,10 +69,9 @@ export async function getServerSideProps(ctx) {
 
   return {
     props: {
-      departments,
-      users,
-      total_pages,
+      courses,
       total_rows,
+      schools,
     },
   };
 }

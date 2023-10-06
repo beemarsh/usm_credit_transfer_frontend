@@ -1,16 +1,11 @@
 import { useAuthCheck } from "../../hooks/useAuthCheck";
 import { DashBoardLayout } from "../../layouts";
 import { Loading } from "../../components";
-import Users from "../../components/dashboard/admin/Users";
 import { DEBUG, SERVER_URL } from "../../config/conf";
 import { enqueueSnackbar } from "notistack";
+import USMMajors from "../../components/dashboard/admin/UsmMajors";
 
-export default function UsersAdmin({
-  departments,
-  users,
-  total_pages,
-  total_rows,
-}) {
+export default function UsersAdmin({ majors, total_rows, departments }) {
   const { isAuthenticated, user, authenticating } = useAuthCheck();
   if (authenticating) {
     // Loading state while verifying tokens
@@ -19,11 +14,10 @@ export default function UsersAdmin({
     // Render the protected content
     return (
       <DashBoardLayout user={user}>
-        <Users
-          departments={departments}
-          users={users}
-          total_pages={total_pages}
+        <USMMajors
+          majors={majors}
           total_rows={total_rows}
+          departments={departments}
         />
       </DashBoardLayout>
     );
@@ -31,34 +25,12 @@ export default function UsersAdmin({
 }
 
 export async function getServerSideProps(ctx) {
-  let departments = [];
-  let users = [];
-  let total_pages = 0;
+  let majors = [];
   let total_rows = 0;
+  let departments = [];
 
   try {
-    const re = await fetch(`${SERVER_URL}/get_departments`, {
-      credentials: "include",
-      method: "POST",
-      headers: { ...ctx.req.headers, "Content-Type": "application/json" },
-      body: JSON.stringify({ q: "", all: true }),
-    });
-
-    if (!re.ok) throw await re.json();
-
-    let results = await re.json();
-    departments = results?.data;
-  } catch (error) {
-    if (DEBUG) console.log(error);
-    enqueueSnackbar({
-      message: error?.message
-        ? error?.message
-        : "Sorry! Couldn't fetch departments properly",
-    });
-  }
-
-  try {
-    const re = await fetch(`${SERVER_URL}/get_users`, {
+    const re = await fetch(`${SERVER_URL}/get_majors`, {
       credentials: "include",
       method: "POST",
       headers: { ...ctx.req.headers, "Content-Type": "application/json" },
@@ -68,24 +40,43 @@ export async function getServerSideProps(ctx) {
     if (!re.ok) throw await re.json();
 
     let result = await re.json();
-    users = result?.data;
-    total_pages = result?.total;
+    majors = result?.data;
     total_rows = result?.total_rows;
   } catch (error) {
     if (DEBUG) console.log(error);
     enqueueSnackbar({
       message: error?.message
         ? error?.message
-        : "Sorry! Couldn't fetch users properly",
+        : "Sorry! Couldn't fetch majors properly",
+    });
+  }
+
+  try {
+    const re = await fetch(`${SERVER_URL}/get_departments`, {
+      credentials: "include",
+      method: "POST",
+      headers: { ...ctx.req.headers, "Content-Type": "application/json" },
+      body: JSON.stringify({ q: "",all:true }),
+    });
+
+    if (!re.ok) throw await re.json();
+
+    let result = await re.json();
+    departments = result?.data;
+  } catch (error) {
+    if (DEBUG) console.log(error);
+    enqueueSnackbar({
+      message: error?.message
+        ? error?.message
+        : "Sorry! Couldn't fetch departments properly",
     });
   }
 
   return {
     props: {
-      departments,
-      users,
-      total_pages,
+      majors,
       total_rows,
+      departments,
     },
   };
 }
