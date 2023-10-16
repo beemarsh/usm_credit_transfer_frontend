@@ -10,7 +10,7 @@ export function isLongNameValid(name) {
 }
 
 export function isSchoolCodeValid(code) {
-  const pattern = /^[A-Za-z]+$/;
+  const pattern = /^[A-Za-z0-9\s]+$/;
   return pattern.test(code) && code?.length >= 3;
 }
 
@@ -67,6 +67,6 @@ export function isValidHours(hour) {
 }
 
 export function isValidCourseID(id) {
-  const pattern = /^[A-Za-z0-9]+$/;
+  const pattern = /^[A-Za-z0-9\s]+$/;
   return pattern.test(id) && id?.length >= 3;
 }

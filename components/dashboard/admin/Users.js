@@ -44,9 +44,9 @@ import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
 
-const rows_per_page = 2;
+const rows_per_page = NUM_OF_ROWS_PER_PAGE;
 import { enqueueSnackbar } from "notistack";
-import { DEBUG, SERVER_URL } from "../../../config/conf";
+import { DEBUG, NUM_OF_ROWS_PER_PAGE, SERVER_URL } from "../../../config/conf";
 import { MoreVert } from "@mui/icons-material";
 import { useRouter } from "next/router";
 import { DataGrid } from "@mui/x-data-grid";
@@ -260,13 +260,13 @@ export default function Users({ departments, users, total_pages, total_rows }) {
           }}
         />
       </Box>
-      <UserDialog
-        open={open}
-        onClose={handleClose}
-        departments={departments}
-        edit={isEdit}
-        defaultVal={current_default_value}
-      />
+        <UserDialog
+          open={open}
+          onClose={handleClose}
+          departments={departments}
+          edit={isEdit}
+          defaultVal={current_default_value}
+        />
 
       <Box sx={{ overflow: "hidden" }}>
         {isSearchResultsShowing ? (

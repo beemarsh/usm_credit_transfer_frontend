@@ -32,6 +32,7 @@ import {
   isUsmIDValid,
   isValidAddress,
   isValidPhoneNumber,
+  isValidEmail
 } from "../../utils/validators";
 import { enqueueSnackbar } from "notistack";
 import { DEBUG, SERVER_URL } from "../../config/conf";
@@ -46,11 +47,11 @@ export default function DashboardAddStudent({ initials }) {
 
   const [pp, setPP] = useState({ value: null, error: "" });
   const [first_name, set_first_name] = useState({
-    value: "Bimarsh",
+    value: "",
     error: "",
   });
-  const [last_name, set_last_name] = useState({ value: "Bhusal", error: "" });
-  const [usm_id, set_usm_id] = useState({ value: "10173074", error: "" });
+  const [last_name, set_last_name] = useState({ value: "", error: "" });
+  const [usm_id, set_usm_id] = useState({ value: "", error: "" });
 
   //
   const [std_prev_school, set_std_prev_school] = useState([
@@ -65,11 +66,11 @@ export default function DashboardAddStudent({ initials }) {
   const [country, set_country] = useState({ value: "US", error: "" });
 
   //
-  const [phone_number, set_phone_number] = useState({
-    value: "6013072081",
+  const [email, set_email] = useState({
+    value: "",
     error: "",
   });
-  const [major, set_major] = useState({ value: "CSC", error: "" });
+  const [major, set_major] = useState({ value: "", error: "" });
   const [transfer_date, set_transfer_date] = useState({
     value: dayjs(),
     error: "",
@@ -83,15 +84,6 @@ export default function DashboardAddStudent({ initials }) {
   const [courses, setCourses] = useState([]);
 
   const [selectedcourses, setSelectedCourses] = useState([]);
-  //Selcted Coursese Format;
-  // selectedcourses = [
-  //   {
-  //     school_code: "",
-  //     school_name: "",
-  //     course_list: [{ value: "", error: "", key: "" }],
-  //   },
-  // { .... }
-  // ];
 
   const [fetching, setFetching] = useState(false);
   const [verified, setVerifiedStatus] = useState(false);
@@ -104,7 +96,7 @@ export default function DashboardAddStudent({ initials }) {
       country.value !== "" &&
       country.value !== null &&
       country.value !== undefined;
-    let phone_check = isValidPhoneNumber(phone_number.value);
+    let email_check = isValidEmail(email.value);
     let major_check =
       major.value !== "" && major.value !== null && major.value !== undefined;
     let trf_date_check =
@@ -142,10 +134,10 @@ export default function DashboardAddStudent({ initials }) {
     if (!country_check) {
       set_country((pre) => ({ ...pre, error: "Please select a country" }));
     }
-    if (!phone_check) {
-      set_phone_number((pre) => ({
+    if (!email_check) {
+      set_email((pre) => ({
         ...pre,
-        error: "Please enter a valid phone number",
+        error: "Please enter a valid student email",
       }));
     }
     if (!major_check) {
@@ -170,7 +162,7 @@ export default function DashboardAddStudent({ initials }) {
       !usm_id_check ||
       !prev_school_check ||
       !country_check ||
-      !phone_check ||
+      !email_check ||
       !major_check ||
       !trf_date_check ||
       !grad_date_check
@@ -218,7 +210,7 @@ export default function DashboardAddStudent({ initials }) {
         last_name: last_name.value,
         id: usm_id.value,
         country: country.value,
-        phone_number: phone_number.value,
+        email: email.value,
         major: major.value,
         transfer_date: transfer_date.value.toISOString(),
         graduation_date: graduation_date.value.toISOString(),
@@ -293,7 +285,7 @@ export default function DashboardAddStudent({ initials }) {
             usm_id={usm_id}
             std_prev_school={std_prev_school}
             country={country}
-            phone_number={phone_number}
+            email={email}
             major={major}
             transfer_date={transfer_date}
             graduation_date={graduation_date}
@@ -302,7 +294,7 @@ export default function DashboardAddStudent({ initials }) {
             set_usm_id={set_usm_id}
             set_std_prev_school={set_std_prev_school}
             set_country={set_country}
-            set_phone_number={set_phone_number}
+            set_email={set_email}
             set_major={set_major}
             set_transfer_date={set_transfer_date}
             set_graduation_date={set_graduation_date}
@@ -327,7 +319,7 @@ export default function DashboardAddStudent({ initials }) {
             usm_id={usm_id}
             std_prev_school={std_prev_school}
             country={country}
-            phone_number={phone_number}
+            email={email}
             major={major}
             transfer_date={transfer_date}
             graduation_date={graduation_date}
@@ -352,7 +344,7 @@ const FirstStep = ({
   usm_id,
   std_prev_school,
   country,
-  phone_number,
+  email,
   major,
   transfer_date,
   graduation_date,
@@ -361,7 +353,7 @@ const FirstStep = ({
   set_usm_id,
   set_std_prev_school,
   set_country,
-  set_phone_number,
+  set_email,
   set_major,
   set_transfer_date,
   set_graduation_date,
@@ -570,19 +562,19 @@ const FirstStep = ({
       {/* Fifth address and phone number */}
       <Box sx={{ display: "flex", gap: "10px" }}>
         <TextField
-          label="Phone Number"
+          label="Student Email"
           sx={{ m: 1 }}
-          value={phone_number.value}
+          value={email.value}
           onChange={(e) =>
-            set_phone_number((pre) => {
+            set_email((pre) => {
               return {
                 error: "",
                 value: e.target.value,
               };
             })
           }
-          error={phone_number.error ? true : false}
-          helperText={phone_number.error}
+          error={email.error ? true : false}
+          helperText={email.error}
         />
         <FormControl
           sx={{ minWidth: "50%" }}
@@ -854,7 +846,7 @@ const ThirdStep = ({
   usm_id,
   std_prev_school,
   country,
-  phone_number,
+  email,
   major,
   transfer_date,
   graduation_date,
@@ -897,7 +889,7 @@ const ThirdStep = ({
       </Box>
 
       <Box sx={{ display: "flex", gap: "40px", alignItems: "center" }}>
-        <Typography variant="h6">Phone Number: {phone_number.value}</Typography>
+        <Typography variant="h6">Phone Number: {email.value}</Typography>
       </Box>
 
       <Box sx={{ display: "flex", gap: "40px", alignItems: "center" }}>

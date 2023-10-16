@@ -13,7 +13,7 @@ export default function Dashboard({}) {
     // Render the protected content
     return (
       <DashBoardLayout user={user}>
-        <DashBoardHome />
+        <DashBoardHome is_admin={user?.is_admin}/>
       </DashBoardLayout>
     );
   }

@@ -11,7 +11,7 @@ import { nav_links } from "../../layouts/dashboard/conf";
 import Image from "next/image";
 import Link from "next/link";
 
-export default function DashBoardHome({ user }) {
+export default function DashBoardHome({ is_admin }) {
   return (
     <Box
       sx={{
@@ -23,7 +23,8 @@ export default function DashBoardHome({ user }) {
       }}
     >
       {nav_links.map(({ title, link, description, LargeIcon }) => {
-        if (link === "/dashboard") return null;
+        if (link === "/dashboard" || (link === "/admin" && !is_admin))
+          return null;
         else
           return (
             <Card

@@ -22,6 +22,7 @@ export function useAuthCheck() {
           setIsAuthenticated(true); // Tokens are valid
           const re = await response.json();
           setUser(re?.user);
+          console.log(re);
         } else {
           setIsAuthenticated(false); // Tokens are not valid
           router.push("/login"); // Redirect to the login page
