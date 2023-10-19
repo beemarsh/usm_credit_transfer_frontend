@@ -3,19 +3,22 @@ import { useRouter } from "next/router";
 import Image from "next/image";
 import UniversityLogo from "../public/images/univ_logo.png";
 import { useState } from "react";
-import { DEBUG, SERVER_URL } from "../config/conf";
-import { useAuthCheck } from "../hooks/useAuthCheck";
+import { APP_TITLE, DEBUG, SERVER_URL } from "../config/conf";
 import { useSnackbar } from "notistack";
-import Loading from "./Loading";
+import { login_style } from "../styles/login.css";
 
 export default function Login() {
-  const [username, setUsername] = useState("admin@usm.edu");
-  const [password, setPassword] = useState("admin123");
+  // States
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [fetching, setFetching] = useState(false);
 
   const router = useRouter();
   const { enqueueSnackbar } = useSnackbar();
 
   const handleLogin = async () => {
+    // Before sending request, set fetching on, so all the buttons and text inputs are disabled
+    setFetching(true);
     try {
       const re = await fetch(`${SERVER_URL}/login`, {
         method: "POST",
@@ -31,6 +34,7 @@ export default function Login() {
 
       if (!re.ok) throw await re.json();
 
+      setFetching(false);
       // Redirect to dashboard
       router.push("/dashboard");
     } catch (error) {
@@ -39,50 +43,49 @@ export default function Login() {
         message: error?.message ? error?.message : "Sorry! Couldn't login",
       });
     }
+    setFetching(false);
   };
 
   return (
-    <Box
-      sx={{
-        width: "100vw",
-        height: "100vh",
-        justifyContent: "center",
-        alignItems: "center",
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
-      <Box
-        sx={{
-          width: { xs: 200, sm: 300, md: 400, xl: 400 },
-          display: "flex",
-          flexDirection: "column",
-          gap: 4,
-        }}
-      >
-        <Image
-          src={UniversityLogo}
-          alt="Loog of the USM"
-          width={200}
-          height={200}
-          // blurDataURL="data:..." automatically provided
-          // placeholder="blur" // Optional blur-up while loading
-        />
+    <Box sx={login_style.outer_box}>
+      <Box sx={login_style.inner_box}>
+        {/* Uni Logo */}
+        <Box sx={login_style.uni_logo_box}>
+          <Image
+            src={UniversityLogo}
+            alt="Logo of USM"
+            width={200}
+            height={200}
+          />
+        </Box>
+
+        {/* Title */}
+
+        <Typography variant="h5" sx={login_style.title}>
+          {APP_TITLE}
+        </Typography>
+
+        {/* Login Form  */}
         <Box
-          sx={{ display: "flex", gap: 4, flexDirection: "column" }}
+          sx={login_style.form_box}
           component="form"
           onSubmit={(e) => {
             e.preventDefault();
             handleLogin();
           }}
         >
+          {/* Email Input */}
           <TextField
-            id="username"
-            label="Username"
+            id="email"
+            label="Email"
             variant="outlined"
             value={username}
             onChange={(v) => setUsername(v.target.value)}
+            disabled={fetching}
+            type="email"
           />
+
+          {/* Password Input */}
           <TextField
             id="password"
             label="Password"
@@ -90,9 +93,17 @@ export default function Login() {
             type="password"
             value={password}
             onChange={(v) => setPassword(v.target.value)}
+            disabled={fetching}
           />
-          <Button variant="contained" type="submit">
-            Submit
+
+          {/* Submit Button */}
+          <Button
+            variant="contained"
+            type="submit"
+            disabled={fetching}
+            sx={login_style.submit_button}
+          >
+            Login
           </Button>
         </Box>
       </Box>

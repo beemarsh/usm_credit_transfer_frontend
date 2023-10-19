@@ -1,21 +1,38 @@
-import { useRouter } from "next/router";
 import { Login } from "../components";
-import { Loading } from "../components";
-import { useAuthCheck } from "../hooks/useAuthCheck";
+import { DEBUG } from "../config/conf";
+import { verifyUser } from "../config/requests";
 
-export default function LoginPage() {
-  const { authenticating, isAuthenticated } = useAuthCheck();
-  const router = useRouter();
+export default function LoginPage({ authenticated, user, error }) {
+  return <Login />;
+}
 
-  if (authenticating) {
-    // Loading state while verifying tokens
-    return <Loading />;
-  } else if (!authenticating && isAuthenticated) {
-    //If the user is already logged in, route to dashboard
-    router.push("/dashboard");
+export async function getServerSideProps(ctx) {
+  let authenticated = false;
+  let user = null;
+  let redirect = null;
+  try {
+    const verification = await verifyUser(ctx);
+    authenticated = verification?.authenticated;
+    user = verification?.user;
+    redirect = verification?.redirect;
+  } catch (err) {
+    if (DEBUG) console.log(err);
   }
-  {
-    // Render the protected content
-    return <Login />;
+
+  //Redirect to the destined location
+  if (redirect) {
+    return {
+      redirect: {
+        destination: redirect,
+        permanent: true,
+      },
+    };
   }
+
+  return {
+    props: {
+      authenticated: authenticated,
+      user: user,
+    },
+  };
 }

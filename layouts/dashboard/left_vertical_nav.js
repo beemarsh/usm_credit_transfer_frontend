@@ -9,11 +9,12 @@ import {
   Typography,
 } from "@mui/material";
 import Image from "next/image";
-import UniLogo from "../../public/images/univ_logo.png";
+import Link from "next/link";
 
 import { drawerWidth, nav_links } from "./conf";
-import Link from "next/link";
-import { app_title } from "../../config/conf";
+import UniLogo from "../../public/images/univ_logo.png";
+import { APP_TITLE } from "../../config/conf";
+import { dashboard_layout_styles } from "../../styles/dashboard_layout.css.js";
 
 export default function CustomVerticalLeftNav({
   mobileOpen,
@@ -22,12 +23,14 @@ export default function CustomVerticalLeftNav({
 }) {
   return (
     <Box>
+      {/* Mobile only opens when the screen size is below a threshold */}
       <MobileDrawer
         mobileOpen={mobileOpen}
         handleDrawerToggle={handleDrawerToggle}
         {...props}
       />
 
+      {/* It is only shown when screen size is above the threshold */}
       <DesktopDrawer {...props} />
     </Box>
   );
@@ -64,15 +67,9 @@ const DesktopDrawer = (props) => {
       variant="permanent"
       elevation={0}
       PaperProps={{
-        sx: { border: 0, position: "relative" },
+        sx: dashboard_layout_styles.desktop_paper,
       }}
-      sx={{
-        display: { xs: "none", sm: "block" },
-        "& .MuiDrawer-paper": {
-          boxSizing: "border-box",
-          // width: drawerWidth,
-        },
-      }}
+      sx={dashboard_layout_styles.desktop_drawer}
       open
       anchor="left"
     >
@@ -83,24 +80,15 @@ const DesktopDrawer = (props) => {
 
 const LeftDrawerMainContent = ({ isAdmin }) => (
   <div>
-    <Box
-      sx={{ display: "flex", alignItems: "center", flexDirection: "column" }}
-    >
+    <Box sx={dashboard_layout_styles.drawer_content}>
       <Box bgcolor="primary">
-        <Image src={UniLogo} alt="Logo of the USM" width={120} height={120} />
+        <Image src={UniLogo} alt="Logo of USM" width={120} height={120} />
       </Box>
       <Typography
         variant="h6"
-        component="a"
-        href="/"
-        sx={{
-          mr: 2,
-          fontWeight: 700,
-          //   letterSpacing: ".3rem",
-          textDecoration: "none",
-        }}
+        sx={dashboard_layout_styles.drawer_title}
       >
-        {app_title}
+        {APP_TITLE}
       </Typography>
     </Box>
     <List>

@@ -1,7 +1,12 @@
 body {
-  font-family: 'SF Pro Text', 'SF Pro Icons', 'Helvetica Neue', 'Helvetica',
-    'Arial', sans-serif;
+  font-family: "SF Pro Text", "SF Pro Icons", "Helvetica Neue", "Helvetica",
+    "Arial", sans-serif;
   padding: 0;
 
   margin: 0;
+}
+
+@font-face {
+  font-family: "RobotoMono"; /* The name you will use to reference the font */
+  src: url("../fonts/RobotoMono-Medium.ttf") format("ttf");
 }
