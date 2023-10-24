@@ -10,6 +10,7 @@ export async function getServerSideProps(ctx) {
   let authenticated = false;
   let user = null;
   let redirect = null;
+  console.log(process.env);
   try {
     const verification = await verifyUser(ctx);
     authenticated = verification?.authenticated;
