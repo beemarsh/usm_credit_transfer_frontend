@@ -519,7 +519,7 @@ function UserDialog({ open, onClose, student_data }) {
     try {
       const re = await fetch(`${SERVER_URL}/delete_marked_course`, {
         credentials: "include",
-        method: "POST",
+        method: "DELETE",
         body: JSON.stringify({
           ...format_id_school(selected_rows),
           student_id: student_id,
