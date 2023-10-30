@@ -179,10 +179,10 @@ export default function DashboardAddStudent({ initials }) {
     });
 
     if (!is_correct) {
-      let new_selectedcourses_with_error = selectedcourses.map((arr) => {
+      let new_selectedcourses_with_error = selectedcourses?.map((arr) => {
         return {
           ...arr,
-          course_list: arr.course_list.map((item) => {
+          course_list: arr.course_list?.map((item) => {
             if (item.value === "") item["error"] = "Please select a course";
             return item;
           }),
@@ -266,7 +266,7 @@ export default function DashboardAddStudent({ initials }) {
         }}
       >
         <Stepper activeStep={activeStep} alternativeLabel>
-          {steps.map((label, index) => {
+          {steps?.map((label, index) => {
             return (
               <Step key={label}>
                 <StepLabel>{label}</StepLabel>
@@ -495,7 +495,7 @@ const FirstStep = ({
                     });
                   }}
                 >
-                  {schools.map(({ code, name }) => {
+                  {schools?.map(({ code, name }) => {
                     let exists_already = std_prev_school?.some(
                       (obj) => obj.value === code
                     );
@@ -550,7 +550,7 @@ const FirstStep = ({
               })
             }
           >
-            {countries.map(({ code, name, isDefault }) => (
+            {countries?.map(({ code, name, isDefault }) => (
               <MenuItem key={code} value={code} defaultChecked={isDefault}>
                 {name}
               </MenuItem>
@@ -594,7 +594,7 @@ const FirstStep = ({
               })
             }
           >
-            {majors.map(({ major_code, major_name }) => (
+            {majors?.map(({ major_code, major_name }) => (
               <MenuItem key={major_code} value={major_code}>
                 {`${major_name} (${major_code})`}
               </MenuItem>
@@ -655,7 +655,7 @@ const SecondStep = ({
           method: "POST",
           credentials: "include",
           body: JSON.stringify({
-            schools: selected_school.map((item) => ({
+            schools: selected_school?.map((item) => ({
               school_code: item.value,
             })),
           }),
@@ -670,7 +670,7 @@ const SecondStep = ({
         setCourses(data);
         //Now setting the state so that we have proper format
         let new_selected_course_format = [];
-        data.map(({ school_name, school_code }) => {
+        data?.map(({ school_name, school_code }) => {
           let school_already_exists = selectedcourses.find(
             (item) => item?.school_code === school_code
           );
@@ -732,14 +732,14 @@ const SecondStep = ({
   else
     return (
       <>
-        {selectedcourses.map(
+        {selectedcourses?.map(
           ({ school_code, school_name, course_list }, index) => {
             return (
               <Box key={`${school_code}-${school_name}`}>
                 <Typography>{`${school_name} (${school_code})`}</Typography>
                 <hr />
 
-                {course_list.map(({ value, error, key }, course_idx) => {
+                {course_list?.map(({ value, error, key }, course_idx) => {
                   return (
                     <Box
                       key={key}
@@ -913,7 +913,7 @@ const ThirdStep = ({
 
       <Typography variant="h4">Courses</Typography>
 
-      {selectedcourses.map(({ school_code, school_name, course_list }, idx) => {
+      {selectedcourses?.map(({ school_code, school_name, course_list }, idx) => {
         let target_school_courses = courses?.find(
           (obj) => obj.school_code === school_code
         )?.courses;

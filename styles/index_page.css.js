@@ -27,6 +27,12 @@ export const index_page_styles = {
     textAlign: "center",
     color: "#fff",
   },
+  buttonLink: {
+    width: "100%",
+    display: "flex",
+    justifyContent: "center",
+    textDecoration: "none",
+  },
   button: { width: { xs: "90%", sm: 300, md: 400 }, height: 55 },
 
   noncontent: {
@@ -51,11 +57,12 @@ export const index_page_styles = {
     bottom: 0,
     width: "100%",
     background: "#08070c",
-    //   height:"50px"
     py: "20px",
     alignItems: "center",
     justifyContent: "center",
     display: "flex",
+    flexDirection: { xs: "column", md: "row" },
+    gap:"10px"
   },
   iconsContainer: { display: "flex", gap: "10px" },
   icons: {
@@ -64,6 +71,9 @@ export const index_page_styles = {
       color: "#ccc ",
     },
   },
-  designerContainer:{ position: "absolute", right: 10 },
-  designerText:{ color: "#666" }
+  designerContainer: {
+    position: { xs: "relative", md: "absolute" },
+    right: 10,
+  },
+  designerText: { color: "#666" },
 };

@@ -47,7 +47,7 @@ export default function Home() {
         </Typography>
 
         {/*  Login Button*/}
-        <Link href="/login">
+        <Link href="/login" style={index_page_styles.buttonLink}>
           <Button
             variant="contained"
             disableRipple
@@ -58,7 +58,7 @@ export default function Home() {
         </Link>
 
         {/* Request Access BUtton */}
-        <Link href="/request_access">
+        <Link href="/request_access" style={index_page_styles.buttonLink}>
           <Button
             variant="outlined"
             disableRipple
